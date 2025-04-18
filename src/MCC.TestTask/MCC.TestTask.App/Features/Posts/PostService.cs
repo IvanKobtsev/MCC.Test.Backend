@@ -52,7 +52,7 @@ public class PostService
 
         if (filter.TagIds.Count > 0)
         {
-            var existingTagsCount = _blogDbContext.Tags.Count(t => filter.TagIds.Contains(t.Id));
+            var existingTagsCount = await _blogDbContext.Tags.CountAsync(t => filter.TagIds.Contains(t.Id));
 
             if (existingTagsCount != filter.TagIds.Distinct().Count())
                 return Result.Fail(new ValidationError("Invalid tag id"));
@@ -76,7 +76,7 @@ public class PostService
         if (filter.CommunityId.HasValue)
             query = query.Where(x => x.CommunityId == filter.CommunityId.Value);
 
-        var totalCount = query.Count();
+        var totalCount = await query.CountAsync();
 
         query = sorting switch
         {
@@ -90,9 +90,9 @@ public class PostService
 
         return new PostPagedListDto
         {
-            Posts = query.Select(p=> p.ToDto(userId))
+            Posts = await query.Select(p=> p.ToDto(userId))
                 .Paginate(pagination)
-                .ToList(),
+                .ToListAsync(),
             Pagination = pagination.ToDto(totalCount)
         };
     }
