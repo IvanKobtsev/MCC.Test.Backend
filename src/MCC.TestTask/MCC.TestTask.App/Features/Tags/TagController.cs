@@ -1,6 +1,8 @@
 ﻿using System.Net;
+using FluentResults;
 using MCC.TestTask.App.Features.Tags.Dto;
 using FluentResults.Extensions.AspNetCore;
+using MCC.TestTask.App.Services.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,10 +12,12 @@ namespace MCC.TestTask.App.Features.Tags;
 public class TagController : ControllerBase
 {
     private readonly TagService _tagService;
-
-    public TagController(TagService tagService)
+    private readonly UserAccessor _userAccessor;
+    
+    public TagController(TagService tagService, UserAccessor userAccessor)
     {
         _tagService = tagService;
+        _userAccessor = userAccessor;
     }
 
     [HttpGet]
@@ -27,6 +31,8 @@ public class TagController : ControllerBase
     [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
     public async Task<ActionResult<Guid>> CreateTag([FromBody] CreateTagModel model)
     {
-        return await _tagService.CreateTag(model.Name).ToActionResult();
+        return await _userAccessor.GetUserId()
+            .Bind(async Task<Result<Guid>> (userId) => await _tagService.CreateTag(model.Name, userId))
+            .ToActionResult();
     }
 }
