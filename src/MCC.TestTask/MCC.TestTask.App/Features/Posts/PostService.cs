@@ -45,7 +45,7 @@ public class PostService
         if (!communityValidationResult.IsSuccess)
             return communityValidationResult;
 
-        var query = _blogDbContext.Posts.ReadableByUser(userId);
+        var query = _blogDbContext.Posts.AsNoTracking().AsSplitQuery().ReadableByUser(userId);
 
         if (!string.IsNullOrEmpty(filter.Author))
             query = query.Where(x => x.Author.FullName.Contains(filter.Author));
@@ -60,11 +60,16 @@ public class PostService
             query = query.Where(p => p.Tags.Any(t => filter.TagIds.Contains(t.Id)));
         }
 
-        if (filter.MinReadingTime.HasValue)
-            query = query.Where(x => x.ReadingTime >= filter.MinReadingTime.Value);
-
-        if (filter.MaxReadingTime.HasValue)
-            query = query.Where(x => x.ReadingTime <= filter.MaxReadingTime.Value);
+        query = filter switch
+        {
+            { MinReadingTime: not null, MaxReadingTime: null } => query.Where(x =>
+                x.ReadingTime >= filter.MinReadingTime.Value),
+            { MinReadingTime: null, MaxReadingTime: not null } => query.Where(x =>
+                x.ReadingTime <= filter.MaxReadingTime.Value),
+            { MinReadingTime: not null, MaxReadingTime: not null } => query.Where(x =>
+                x.ReadingTime >= filter.MinReadingTime && x.ReadingTime <= filter.MaxReadingTime.Value),
+            _ => query
+        };
 
         if (filter.OnlyMyCommunities.HasValue)
             query = query.Where(p =>
