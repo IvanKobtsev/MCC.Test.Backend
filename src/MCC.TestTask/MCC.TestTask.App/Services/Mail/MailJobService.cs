@@ -17,11 +17,13 @@ public class MailJobService
         _blogDbContext = blogDbContext;
     }
 
-    public Result NotifySubscribersAboutNewPost(Guid postId)
+    public async Task<Result> NotifySubscribersAboutNewPost(Guid postId)
     {
-        var post = _blogDbContext.Posts.Include(p => p.Community).ThenInclude(c => c!.Subscribers)
+        var post = await _blogDbContext.Posts
+            .Include(p => p.Community).ThenInclude(c => c!.Subscribers)
             .Include(p => p.Author)
-            .FirstOrDefault(p => p.Id == postId);
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(p => p.Id == postId);
 
         if (post?.Community == null)
             return CustomErrors.ValidationError("Post not found or doesn't have a Community");

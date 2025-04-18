@@ -181,8 +181,11 @@ public class PostService
 
         await _blogDbContext.SaveChangesAsync();
 
-        _mailJobService.NotifySubscribersAboutNewPost(post.Id);
-
+        if (communityId == null) return post.Id;
+        
+        var result = await _mailJobService.NotifySubscribersAboutNewPost(post.Id);
+        
+        if (result.IsFailed) return result;
         return post.Id;
     }
 
