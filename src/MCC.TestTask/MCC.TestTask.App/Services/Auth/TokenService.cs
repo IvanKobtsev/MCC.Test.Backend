@@ -139,13 +139,21 @@ public class TokenService
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-
-        if (!(securityToken is JwtSecurityToken jwtSecurityToken) ||
-            !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
-                StringComparison.InvariantCultureIgnoreCase))
-            return Result.Fail(new ValidationError("Invalid token"));
-
-        return principal;
+        
+        try
+        {
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+            
+            if (!(securityToken is JwtSecurityToken jwtSecurityToken) ||
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
+                    StringComparison.InvariantCultureIgnoreCase))
+                return Result.Fail(new ValidationError("Invalid token"));
+            
+            return principal;
+        }
+        catch (ArgumentException argumentException)
+        {
+            return Result.Fail(new ValidationError("Invalid token structure"));
+        }
     }
 }
