@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCC.TestTask.Persistence", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCC.TestTask.Infrastructure", "MCC.TestTask.Infrastructure\MCC.TestTask.Infrastructure.csproj", "{48090959-48C4-4680-9872-E207970B5D89}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCC.TestTask.Benchmarks", "MCC.TestTask.Benchmarks\MCC.TestTask.Benchmarks.csproj", "{7BECF287-0E0A-4FE2-85EE-07BECE74216B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{48090959-48C4-4680-9872-E207970B5D89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48090959-48C4-4680-9872-E207970B5D89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{48090959-48C4-4680-9872-E207970B5D89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BECF287-0E0A-4FE2-85EE-07BECE74216B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BECF287-0E0A-4FE2-85EE-07BECE74216B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BECF287-0E0A-4FE2-85EE-07BECE74216B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BECF287-0E0A-4FE2-85EE-07BECE74216B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
