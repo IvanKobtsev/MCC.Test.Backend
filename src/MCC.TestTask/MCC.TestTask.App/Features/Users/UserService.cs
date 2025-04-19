@@ -5,6 +5,7 @@ using MCC.TestTask.Domain;
 using MCC.TestTask.Persistance;
 using MCC.TestTask.Infrastructure;
 using FluentResults;
+using MCC.TestTask.App.Features.Sessions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -57,7 +58,7 @@ public class UserService
         return Result.Ok(user.ToDto());
     }
 
-    public Result<LoginResultDto> LoginUser(UserLoginModel userLoginModel)
+    public async Task<Result<LoginResultDto>> LoginUser(UserLoginModel userLoginModel)
     {
         var user = _db.Users.FirstOrDefault(u => u.Email == userLoginModel.Email);
         if (user is null)
@@ -68,7 +69,7 @@ public class UserService
         if (result == PasswordVerificationResult.Failed)
             return CustomErrors.ValidationError("Invalid password");
 
-        var session = _sessionService.CreateNewSession(user.Id, TimeSpan.FromDays(7));
+        var session = await _sessionService.CreateNewSession(user.Id, TimeSpan.FromDays(7));
 
         var accessTokenResult = _tokenService.IssueAccessToken(user, session);
         var refreshTokenResult = _tokenService.IssueRefreshToken(user, session);
@@ -76,7 +77,9 @@ public class UserService
         if (accessTokenResult.IsFailed || refreshTokenResult.IsFailed)
             return Result.Fail(new ValidationError("Could not issue token"));
 
-        return _sessionService.UpdateRefreshToken(session.Id, refreshTokenResult.Value, DateTime.UtcNow.AddDays(7))
+        await _db.SaveChangesAsync();
+
+        return (await _sessionService.UpdateRefreshToken(session.Id, refreshTokenResult.Value, DateTime.UtcNow.AddDays(7)))
             .Bind<LoginResultDto>(
                 () => new LoginResultDto
                 {
@@ -105,7 +108,7 @@ public class UserService
 
         var user = userResult.Value!;
 
-        var sessionResult = _tokenService.GetSessionIdFromToken(refreshToken)
+        var sessionResult = await _tokenService.GetSessionIdFromToken(refreshToken)
             .Bind(sessionId => _sessionService.GetSession(sessionId));
 
         if (sessionResult.IsFailed)
@@ -125,7 +128,7 @@ public class UserService
         if (newAccessTokenResult.IsFailed || newRefreshTokenResult.IsFailed)
             return Result.Fail(new ValidationError("Could not refresh token"));
 
-        return _sessionService.UpdateRefreshToken(session.Id, newRefreshTokenResult.Value, DateTime.UtcNow.AddDays(7))
+        return (await _sessionService.UpdateRefreshToken(session.Id, newRefreshTokenResult.Value, DateTime.UtcNow.AddDays(7)))
             .Bind<LoginResultDto>(() => new LoginResultDto
             {
                 Token = newAccessTokenResult.Value,
@@ -149,7 +152,7 @@ public class UserService
 
         var user = userResult.Value!;
 
-        var sessionResult = _tokenService.GetSessionIdFromToken(accessToken)
+        var sessionResult =  await _tokenService.GetSessionIdFromToken(accessToken)
             .Bind(sessionId => _sessionService.GetSession(sessionId));
 
         if (sessionResult.IsFailed)
@@ -179,7 +182,7 @@ public class UserService
             return CustomErrors.ValidationError("Invalid password");
 
         user.PasswordHash = _passwordHasher.HashPassword(user, model.NewPassword);
-        _sessionService.ClearSessions(user.Id);
+        await _sessionService.ClearSessions(user.Id);
         await _db.SaveChangesAsync();
 
         return Result.Ok();
@@ -198,6 +201,6 @@ public class UserService
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        return LoginUser(new UserLoginModel { Email = model.Email, Password = model.Password });
+        return await LoginUser(new UserLoginModel { Email = model.Email, Password = model.Password });
     }
 }

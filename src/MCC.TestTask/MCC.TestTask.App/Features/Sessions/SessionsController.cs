@@ -1,4 +1,5 @@
-﻿using MCC.TestTask.App.Features.Sessions.Dto;
+﻿using FluentResults.Extensions;
+using MCC.TestTask.App.Features.Sessions.Dto;
 using MCC.TestTask.App.Services.Auth;
 using FluentResults.Extensions.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
@@ -20,25 +21,25 @@ public class SessionsController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<List<SessionDto>> GetSessions()
+    public async Task<ActionResult<List<SessionDto>>> GetSessions()
     {
-        return _userAccessor.GetUserId()
-            .Map(userId => _sessionService.GetSessions(userId).Select(s => s.ToDto()).ToList())
+        return await _userAccessor.GetUserId()
+            .Bind(userId => _sessionService.GetSessions(userId).Map(sl => sl.Select(s => s.ToDto())))
             .ToActionResult();
     }
 
     [HttpGet("current")]
-    public ActionResult<List<SessionDto>> GetCurrentSession()
+    public async Task<ActionResult<SessionDto>> GetCurrentSession()
     {
-        return _userAccessor.GetSessionId()
+        return await _userAccessor.GetSessionId()
             .Bind(sessionId => _sessionService.GetSession(sessionId).Map(s => s.ToDto()))
             .ToActionResult();
     }
 
     [HttpDelete("{id}")]
-    public ActionResult EndSession(Guid id)
+    public async Task<ActionResult> EndSession(Guid id)
     {
-        return _userAccessor.GetUserId()
+        return await _userAccessor.GetUserId()
             .Bind(userId => _sessionService.DeleteSession(id, userId))
             .ToActionResult();
     }
