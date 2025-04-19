@@ -8,6 +8,7 @@ using MCC.TestTask.App.Services.Auth;
 using MCC.TestTask.App.Services.Mail;
 using MCC.TestTask.Domain;
 using MailKit.Net.Smtp;
+using MCC.TestTask.App.Features.Sessions;
 using Microsoft.AspNetCore.Identity;
 
 namespace MCC.TestTask.App.Setup;
@@ -22,7 +23,8 @@ public static class SetupServices
     {
         services.AddScoped<PasswordHasher<User>>(provider => new PasswordHasher<User>());
         services.AddScoped<TokenService>();
-        services.AddSingleton<SessionService>();
+        services.AddScoped<SessionService>();
+        services.AddHttpContextAccessor();
         services.AddScoped<UserService>();
         services.AddScoped<UserAccessor>();
         services.AddScoped<CommunityService>();
